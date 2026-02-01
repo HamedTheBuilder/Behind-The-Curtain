@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - Ground
+  - DeathObstacle
   layers:
   - Default
   - TransparentFX
@@ -15,8 +16,8 @@ TagManager:
   - Ground
   - Wall
   - MOON
-  - 
-  - 
+  - Player
+  - DeathObstacle
   - 
   - 
   - 
