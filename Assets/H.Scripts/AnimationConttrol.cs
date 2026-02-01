@@ -1,75 +1,79 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class PlayerAnimationController : MonoBehaviour
 {
     [Header("References")]
     public Animator animator;
     public PlayerController playerController;
-    public SimpleRope ropeScript; // ááÊÍŞŞ ãä ÇáÊÚáíŞ Úáì ÇáÍÈá
+    public UltimateRopeGrabber ropeGrabber; // â­ Ø§Ù„Ù†Ø¸Ø§Ù… Ø§Ù„Ø¬Ø¯ÙŠØ¯ Ø§Ù„Ù†Ù‡Ø§Ø¦ÙŠ
 
     [Header("Animation Parameters")]
-    [Tooltip("ÇÓã ÇáÈÇÑÇãÊÑ İí Animator ááÍÑßÉ ÇáÃİŞíÉ")]
+    [Tooltip("Ø§Ø³Ù… Ø§Ù„Ø¨Ø§Ø±Ø§Ù…ØªØ± ÙÙŠ Animator Ù„Ù„Ø­Ø±ÙƒØ© Ø§Ù„Ø£ÙÙ‚ÙŠØ©")]
     public string horizontalSpeedParam = "HorizontalSpeed";
 
-    [Tooltip("ÇÓã ÇáÈÇÑÇãÊÑ ááÓÑÚÉ ÇáÚãæÏíÉ")]
+    [Tooltip("Ø§Ø³Ù… Ø§Ù„Ø¨Ø§Ø±Ø§Ù…ØªØ± Ù„Ù„Ø³Ø±Ø¹Ø© Ø§Ù„Ø¹Ù…ÙˆØ¯ÙŠØ©")]
     public string verticalSpeedParam = "VerticalSpeed";
 
-    [Tooltip("ÇÓã ÇáÈÇÑÇãÊÑ ááÇäÍäÇÁ")]
+    [Tooltip("Ø§Ø³Ù… Ø§Ù„Ø¨Ø§Ø±Ø§Ù…ØªØ± Ù„Ù„Ø§Ù†Ø­Ù†Ø§Ø¡")]
     public string isCrouchingParam = "IsCrouching";
 
-    [Tooltip("ÇÓã ÇáÈÇÑÇãÊÑ ááÌÑí")]
+    [Tooltip("Ø§Ø³Ù… Ø§Ù„Ø¨Ø§Ø±Ø§Ù…ØªØ± Ù„Ù„Ø¬Ø±ÙŠ")]
     public string isSprintingParam = "IsSprinting";
 
-    [Tooltip("ÇÓã ÇáÈÇÑÇãÊÑ ááÊÃßÏ ãä ÇáÃÑÖíÉ")]
+    [Tooltip("Ø§Ø³Ù… Ø§Ù„Ø¨Ø§Ø±Ø§Ù…ØªØ± Ù„Ù„ØªØ£ÙƒØ¯ Ù…Ù† Ø§Ù„Ø£Ø±Ø¶ÙŠØ©")]
     public string isGroundedParam = "IsGrounded";
 
-    [Tooltip("ÇÓã ÇáÈÇÑÇãÊÑ ááÌÏÇÑ")]
+    [Tooltip("Ø§Ø³Ù… Ø§Ù„Ø¨Ø§Ø±Ø§Ù…ØªØ± Ù„Ù„Ø¬Ø¯Ø§Ø±")]
     public string isTouchingWallParam = "IsTouchingWall";
 
-    [Tooltip("ÇÓã ÊÑíÌÑ ÇáŞİÒ")]
+    [Tooltip("Ø§Ø³Ù… ØªØ±ÙŠØ¬Ø± Ø§Ù„Ù‚ÙØ²")]
     public string jumpTrigger = "Jump";
 
-    [Tooltip("ÇÓã ÇáÈÇÑÇãÊÑ ááÊÚáíŞ Úáì ÇáÍÈá")]
+    [Tooltip("Ø§Ø³Ù… Ø§Ù„Ø¨Ø§Ø±Ø§Ù…ØªØ± Ù„Ù„ØªØ¹Ù„ÙŠÙ‚ Ø¹Ù„Ù‰ Ø§Ù„Ø­Ø¨Ù„")]
     public string isHangingParam = "IsHanging";
 
+    [Tooltip("Ø§Ø³Ù… ØªØ±ÙŠØ¬Ø± Ø¨Ø¯Ø§ÙŠØ© Ø§Ù„ØªØ¹Ù„ÙŠÙ‚ Ø¹Ù„Ù‰ Ø§Ù„Ø­Ø¨Ù„")]
+    public string startHangingTrigger = "StartHanging";
+
     [Header("Animation Smoothing")]
-    public float speedDampTime = 0.1f; // æŞÊ ÇáÊäÚíã ááÓÑÚÉ
-    public float wallSlideSpeed = -1f; // ÓÑÚÉ ÇáÇäÒáÇŞ Úáì ÇáÌÏÇÑ
+    public float speedDampTime = 0.1f;
+    public float wallSlideSpeed = -1f;
 
     private bool wasGrounded;
     private bool wasHanging;
 
     void Start()
     {
-        // Auto-find components if not assigned
         if (animator == null)
             animator = GetComponent<Animator>();
 
         if (playerController == null)
             playerController = GetComponent<PlayerController>();
 
-        if (ropeScript == null)
-            ropeScript = FindObjectOfType<SimpleRope>();
+        if (ropeGrabber == null)
+            ropeGrabber = GetComponent<UltimateRopeGrabber>();
 
-        // ÊÍŞŞ ãä æÌæÏ ÇáãßæäÇÊ ÇáãØáæÈÉ
         if (animator == null)
         {
-            Debug.LogError("Animator ÛíÑ ãæÌæÏ! ÃÖİ Animator Component ááÇÚÈ");
-            enabled = false;
-            return;
+            Debug.LogWarning("Animator ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯!");
         }
 
         if (playerController == null)
         {
-            Debug.LogError("PlayerController ÛíÑ ãæÌæÏ!");
+            Debug.LogError("PlayerController ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯!");
             enabled = false;
             return;
+        }
+
+        if (ropeGrabber == null)
+        {
+            Debug.LogWarning("UltimateRopeGrabber ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯ - Ø£Ù†ÙŠÙ…ÙŠØ´Ù† Ø§Ù„Ø­Ø¨Ù„ Ù„Ù† ÙŠØ¹Ù…Ù„");
         }
     }
 
     void Update()
     {
-        if (animator == null || playerController == null)
+        if (playerController == null || animator == null)
             return;
 
         UpdateAnimationParameters();
@@ -79,15 +83,12 @@ public class PlayerAnimationController : MonoBehaviour
 
     void UpdateAnimationParameters()
     {
-        // 1. ÇáÓÑÚÉ ÇáÃİŞíÉ (ááãÔí æÇáÌÑí)
         float horizontalSpeed = Mathf.Abs(playerController.moveInput);
 
-        // ÅĞÇ ßÇä íÌÑí¡ äÒíÏ ÇáŞíãÉ
         if (playerController.IsSprinting())
         {
             horizontalSpeed *= playerController.sprintMultiplier;
         }
-        // ÅĞÇ ßÇä ãäÍäí¡ äŞáá ÇáŞíãÉ
         else if (playerController.IsCrouching())
         {
             horizontalSpeed *= playerController.crouchSpeedMultiplier;
@@ -95,33 +96,22 @@ public class PlayerAnimationController : MonoBehaviour
 
         animator.SetFloat(horizontalSpeedParam, horizontalSpeed, speedDampTime, Time.deltaTime);
 
-        // 2. ÇáÓÑÚÉ ÇáÚãæÏíÉ (ááŞİÒ æÇáÓŞæØ)
         float verticalSpeed = playerController.GetVerticalVelocity();
 
-        // ÅĞÇ ßÇä íáãÓ ÇáÌÏÇÑ¡ äÓÊÎÏã ÓÑÚÉ ÇáÇäÒáÇŞ
         if (playerController.IsTouchingWall() && !playerController.IsGrounded())
         {
             verticalSpeed = Mathf.Max(verticalSpeed, wallSlideSpeed);
         }
 
         animator.SetFloat(verticalSpeedParam, verticalSpeed);
-
-        // 3. ÍÇáÉ ÇáÇäÍäÇÁ
         animator.SetBool(isCrouchingParam, playerController.IsCrouching());
-
-        // 4. ÍÇáÉ ÇáÌÑí
         animator.SetBool(isSprintingParam, playerController.IsSprinting());
-
-        // 5. ÍÇáÉ ÇáÃÑÖíÉ
         animator.SetBool(isGroundedParam, playerController.IsGrounded());
-
-        // 6. ÍÇáÉ áãÓ ÇáÌÏÇÑ
         animator.SetBool(isTouchingWallParam, playerController.IsTouchingWall());
     }
 
     void HandleJumpAnimation()
     {
-        // ÊÔÛíá ÃäíãíÔä ÇáŞİÒ ÚäÏ ÊÑß ÇáÃÑÖ
         bool isGrounded = playerController.IsGrounded();
 
         if (wasGrounded && !isGrounded && playerController.GetVerticalVelocity() > 0)
@@ -134,39 +124,34 @@ public class PlayerAnimationController : MonoBehaviour
 
     void HandleRopeHangingAnimation()
     {
-        if (ropeScript == null)
+        if (ropeGrabber == null)
             return;
 
-        // ÇáÊÍŞŞ ãä ÇáÊÚáíŞ Úáì ÇáÍÈá
-        // íãßäß ÅÖÇİÉ ãÊÛíÑ public İí SimpleRope íÎÈÑäÇ ÈÇáÍÇáÉ
-        bool isHanging = IsPlayerHangingOnRope();
+        bool isHanging = ropeGrabber.IsGrabbing();
 
         animator.SetBool(isHangingParam, isHanging);
 
-        // ÚäÏ ÈÏÇíÉ ÇáÊÚáíŞ
         if (!wasHanging && isHanging)
         {
-            // íãßäß ÊÔÛíá ÊÑíÌÑ ÎÇÕ ÅĞÇ ÃÑÏÊ
-            // animator.SetTrigger("StartHanging");
+            animator.SetTrigger(startHangingTrigger);
+            Debug.Log("Started hanging animation");
+        }
+        else if (wasHanging && !isHanging)
+        {
+            Debug.Log("Released from rope animation");
         }
 
         wasHanging = isHanging;
     }
 
-    bool IsPlayerHangingOnRope()
+    public bool IsPlayerHangingOnRope()
     {
-        // åĞå ÇáÏÇáÉ ÊÊÍŞŞ ãä ÍÇáÉ ÇáÊÚáíŞ
-        // íãßäß ÊÚÏíáåÇ ÍÓÈ ØÑíŞÉ Úãá ÓßÑÈÊ ÇáÍÈá
+        if (ropeGrabber == null)
+            return false;
 
-        // ØÑíŞÉ 1: ÅĞÇ ßÇä SimpleRope íÍÊæí Úáì ãÊÛíÑ isGrabbing
-        // return ropeScript.isGrabbing;
-
-        // ØÑíŞÉ 2: ÇáÊÍŞŞ ãä æÌæÏ SpringJoint
-        SpringJoint springJoint = playerController.GetComponent<SpringJoint>();
-        return springJoint != null;
+        return ropeGrabber.IsGrabbing();
     }
 
-    // ÏÇáÉ ÇÎÊíÇÑíÉ áÊÛííÑ ÓÑÚÉ ÇáÃäíãíÔä
     public void SetAnimationSpeed(float speed)
     {
         if (animator != null)
@@ -175,7 +160,6 @@ public class PlayerAnimationController : MonoBehaviour
         }
     }
 
-    // ÏÇáÉ ááÚÈ ÃäíãíÔä ãÚíä
     public void PlayAnimation(string animationName)
     {
         if (animator != null)
@@ -184,20 +168,38 @@ public class PlayerAnimationController : MonoBehaviour
         }
     }
 
+    public void TriggerAnimation(string triggerName)
+    {
+        if (animator != null)
+        {
+            animator.SetTrigger(triggerName);
+        }
+    }
+
+    public bool IsPlayingAnimation(string stateName, int layer = 0)
+    {
+        if (animator == null)
+            return false;
+
+        return animator.GetCurrentAnimatorStateInfo(layer).IsName(stateName);
+    }
+
     void OnDrawGizmosSelected()
     {
-        // ÑÓã ãÚáæãÇÊ ááãÓÇÚÏÉ İí ÇáÊØæíÑ
         if (!Application.isPlaying) return;
 
         Vector3 labelPos = transform.position + Vector3.up * 3f;
 
 #if UNITY_EDITOR
+        string hangingStatus = ropeGrabber != null ?
+            ropeGrabber.IsGrabbing().ToString() : "N/A";
+
         UnityEditor.Handles.Label(labelPos,
             $"Grounded: {(playerController?.IsGrounded() ?? false)}\n" +
             $"Wall: {(playerController?.IsTouchingWall() ?? false)}\n" +
             $"Crouch: {(playerController?.IsCrouching() ?? false)}\n" +
             $"Sprint: {(playerController?.IsSprinting() ?? false)}\n" +
-            $"Hanging: {IsPlayerHangingOnRope()}");
+            $"Hanging: {hangingStatus}");
 #endif
     }
 }
