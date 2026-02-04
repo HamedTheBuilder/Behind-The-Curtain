@@ -135,15 +135,15 @@ Material:
     - _QueueControl: 0
     - _QueueOffset: 0
     - _ReceiveShadows: 1
-    - _Smoothness: 0.84
+    - _Smoothness: -243.3
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
     - _StrokeBlendingNoiseScale: 500
-    - _StrokeBlendingNoiseStrength: 0.5
-    - _StrokeRandomness: 0.34
-    - _StrokeScale: 2.37
+    - _StrokeBlendingNoiseStrength: 0
+    - _StrokeRandomness: 1
+    - _StrokeScale: 2.8
     - _Surface: 0
     - _UVSec: 0
     - _UseBlendingNoise: 1
@@ -152,11 +152,11 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _BaseColor: {r: 0.94716984, g: 0.7797692, b: 0.491456, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 0}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
-    - _VariationColorA: {r: 0.3283019, g: 0.2967106, b: 0.2967106, a: 0}
+    - _VariationColorA: {r: 1, g: 1, b: 1, a: 0}
     - _VariationColorB: {r: 1, g: 1, b: 1, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
