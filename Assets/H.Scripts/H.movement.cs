@@ -182,11 +182,14 @@ public class PlayerController : MonoBehaviour
         {
             isCrouching = false;
         }
-
         // إصلاح مشكلة الارتداد عند الهبوط
         if (isGrounded && rb.linearVelocity.y > 0)
         {
-            rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
+            // تحقق من المسافة الفعلية للأرض
+            if (groundHit.distance < groundCheckRadius * 0.5f)
+            {
+                rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
+            }
         }
 
         // ✅ Wall Check محسن
