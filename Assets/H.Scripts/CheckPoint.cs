@@ -2,6 +2,7 @@
 
 /// <summary>
 /// نظام Checkpoint - تذكرة تطفو مع أنيميشن وإضاءة وصوت
+/// الأنيميشن يشتغل مرة واحدة فقط! ⭐
 /// </summary>
 public class Checkpoint : MonoBehaviour
 {
@@ -26,6 +27,11 @@ public class Checkpoint : MonoBehaviour
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private AudioClip activationSound; // صوت التفعيل
     [SerializeField][Range(0f, 1f)] private float soundVolume = 1f;
+
+    [Header("Particle Effect")]
+    [SerializeField] private GameObject particleEffectPrefab; // ⭐ Particle عند التفعيل
+    [SerializeField] private bool spawnParticleOnActivation = true;
+    [SerializeField] private float particleLifetime = 3f;
 
     [Header("Collision")]
     [SerializeField] private LayerMask playerLayer;
@@ -57,6 +63,13 @@ public class Checkpoint : MonoBehaviour
         audioSource.playOnAwake = false;
         audioSource.spatialBlend = 1f; // 3D sound
         audioSource.volume = soundVolume;
+
+        // ⭐ تعطيل Animator في البداية - لا يشتغل لين يتلمس!
+        if (ticketAnimator != null)
+        {
+            ticketAnimator.enabled = false;
+            Debug.Log("Animator disabled - will activate on touch");
+        }
 
         Debug.Log($"Checkpoint {gameObject.name} initialized");
     }
@@ -96,11 +109,27 @@ public class Checkpoint : MonoBehaviour
 
         isActivated = true;
 
-        // ⭐ تشغيل الأنيميشن (مرة واحدة فقط)
+        // ⭐ تفعيل وتشغيل الأنيميشن (مرة واحدة فقط)
         if (ticketAnimator != null)
         {
-            ticketAnimator.Play(activationAnimationName);
+            // تفعيل Animator أولاً
+            ticketAnimator.enabled = true;
+
+            // تشغيل الأنيميشن من البداية
+            ticketAnimator.Play(activationAnimationName, 0, 0f);
             Debug.Log($"Playing animation: {activationAnimationName}");
+
+            // ⭐ تعطيل Animator بعد انتهاء الأنيميشن
+            float animLength = GetAnimationLength(activationAnimationName);
+            if (animLength > 0)
+            {
+                Invoke(nameof(DisableAnimator), animLength);
+            }
+            else
+            {
+                // إذا ما قدرنا نحصل على الطول، نعطله بعد ثانية
+                Invoke(nameof(DisableAnimator), 1f);
+            }
         }
 
         // ⭐ تشغيل الإضاءة (تبقى مشتغلة)
@@ -117,6 +146,14 @@ public class Checkpoint : MonoBehaviour
             Debug.Log("Playing activation sound");
         }
 
+        // ⭐ تشغيل Particle Effect
+        if (spawnParticleOnActivation && particleEffectPrefab != null)
+        {
+            GameObject particle = Instantiate(particleEffectPrefab, transform.position, Quaternion.identity);
+            Destroy(particle, particleLifetime);
+            Debug.Log("Spawned particle effect");
+        }
+
         // ⭐ تسجيل هذا Checkpoint في نظام إدارة اللاعب
         CheckpointManager manager = FindObjectOfType<CheckpointManager>();
         if (manager != null)
@@ -128,6 +165,35 @@ public class Checkpoint : MonoBehaviour
         {
             Debug.LogWarning("CheckpointManager not found in scene!");
         }
+    }
+
+    // ⭐ تعطيل Animator بعد انتهاء الأنيميشن
+    void DisableAnimator()
+    {
+        if (ticketAnimator != null)
+        {
+            ticketAnimator.enabled = false;
+            Debug.Log("✅ Animator disabled - animation will not loop");
+        }
+    }
+
+    // ⭐ الحصول على طول الأنيميشن
+    float GetAnimationLength(string animName)
+    {
+        if (ticketAnimator == null) return 0f;
+
+        RuntimeAnimatorController ac = ticketAnimator.runtimeAnimatorController;
+        if (ac == null) return 0f;
+
+        foreach (AnimationClip clip in ac.animationClips)
+        {
+            if (clip.name == animName)
+            {
+                return clip.length;
+            }
+        }
+
+        return 0f;
     }
 
     // دالة لإرجاع موضع إعادة الظهور
@@ -150,6 +216,12 @@ public class Checkpoint : MonoBehaviour
         if (checkpointLight != null)
         {
             checkpointLight.color = inactiveColor;
+        }
+
+        // إعادة تفعيل Animator
+        if (ticketAnimator != null)
+        {
+            ticketAnimator.enabled = true;
         }
     }
 
