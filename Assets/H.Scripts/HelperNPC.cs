@@ -48,6 +48,11 @@ public class WaypointData
     [Header("Animation")]
     public string customAnimationName = ""; // أنيميشن خاص لهذا الـ Waypoint
 
+    [Header("Object Animator Activation")] // ⭐ جديد
+    public Animator objectAnimatorToActivate; // Animator لأوبجكت يتفعل عند الوصول
+    public bool activateAnimatorOnArrival = false; // تفعيل عند الوصول
+    public bool deactivateAnimatorAfter = false; // تعطيل بعد المغادرة
+
     [Header("Wait Time")]
     public float waitTimeAfter = 0f; // وقت الانتظار بعد الوصول
 }
@@ -65,6 +70,7 @@ public class HelperNPC : MonoBehaviour
     [SerializeField] private float moveSpeed = 3f;
     [SerializeField] private float rotationSpeed = 5f;
     [SerializeField] private float waypointReachDistance = 0.2f;
+    [SerializeField] private bool enableRotation = true; // ⭐ تحكم في الدوران
 
     [Header("Default Animation")]
     [SerializeField] private Animator animator;
@@ -89,6 +95,7 @@ public class HelperNPC : MonoBehaviour
 
     private bool isMoving = false;
     private bool hasStarted = false;
+    private Animator lastActivatedAnimator; // ⭐ تتبع آخر Animator مفعّل
 
     void Start()
     {
@@ -154,6 +161,14 @@ public class HelperNPC : MonoBehaviour
             // المشي للـ Waypoint
             yield return StartCoroutine(MoveToWaypoint(waypointData.waypointTransform));
 
+            // ⭐ تفعيل Animator لأوبجكت عند الوصول
+            if (waypointData.activateAnimatorOnArrival && waypointData.objectAnimatorToActivate != null)
+            {
+                waypointData.objectAnimatorToActivate.enabled = true;
+                lastActivatedAnimator = waypointData.objectAnimatorToActivate;
+                Debug.Log($"✅ Activated Animator: {waypointData.objectAnimatorToActivate.gameObject.name}");
+            }
+
             // ⭐ تشغيل الصوت عند الوصول
             if (waypointData.playSound && waypointData.soundClip != null)
             {
@@ -173,6 +188,13 @@ public class HelperNPC : MonoBehaviour
                 PlayAnimation(idleAnimationName);
                 yield return new WaitForSeconds(waypointData.waitTimeAfter);
             }
+
+            // ⭐ تعطيل Animator بعد المغادرة
+            if (waypointData.deactivateAnimatorAfter && waypointData.objectAnimatorToActivate != null)
+            {
+                waypointData.objectAnimatorToActivate.enabled = false;
+                Debug.Log($"❌ Deactivated Animator: {waypointData.objectAnimatorToActivate.gameObject.name}");
+            }
         }
 
         isMoving = false;
@@ -187,7 +209,7 @@ public class HelperNPC : MonoBehaviour
         Debug.Log("✅ Helper NPC sequence complete!");
     }
 
-    // ⭐ المشي لنقطة معينة
+    // ⭐ المشي لنقطة معينة (مع إصلاح الدوران)
     IEnumerator MoveToWaypoint(Transform target)
     {
         // تشغيل أنيميشن المشي
@@ -199,11 +221,17 @@ public class HelperNPC : MonoBehaviour
             Vector3 direction = (target.position - transform.position).normalized;
             transform.position += direction * moveSpeed * Time.deltaTime;
 
-            // الدوران باتجاه الحركة
-            if (direction != Vector3.zero)
+            // ⭐ الدوران باتجاه الحركة (مع حماية من القيم الصفرية)
+            if (enableRotation && direction.sqrMagnitude > 0.01f) // ⭐ تحقق من أن الاتجاه مو صفر
             {
-                Quaternion targetRotation = Quaternion.LookRotation(direction);
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+                // إزالة Y لتجنب الدوران غير المرغوب
+                direction.y = 0f;
+
+                if (direction != Vector3.zero)
+                {
+                    Quaternion targetRotation = Quaternion.LookRotation(direction);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+                }
             }
 
             yield return null;
@@ -222,9 +250,11 @@ public class HelperNPC : MonoBehaviour
             yield break;
         }
 
-        // الدوران باتجاه الأوبجكت
+        // الدوران باتجاه الأوبجكت (مع حماية)
         Vector3 direction = (data.interactionObject.position - transform.position).normalized;
-        if (direction != Vector3.zero)
+        direction.y = 0f; // ⭐ إزالة Y
+
+        if (enableRotation && direction != Vector3.zero)
         {
             Quaternion targetRotation = Quaternion.LookRotation(direction);
 
@@ -249,11 +279,6 @@ public class HelperNPC : MonoBehaviour
 
         // تنفيذ التفاعل حسب النوع
         float elapsed = 0f;
-
-        // حفظ القيم الابتدائية
-        Vector3 objStartRot = data.interactionObject.localEulerAngles;
-        Vector3 objStartPos = data.interactionObject.localPosition;
-        Vector3 objStartScale = data.interactionObject.localScale;
 
         while (elapsed < data.interactionDuration)
         {
@@ -451,6 +476,10 @@ public class HelperNPC : MonoBehaviour
             {
                 Gizmos.color = Color.cyan; // صوت
             }
+            else if (waypoints[i].activateAnimatorOnArrival) // ⭐ جديد
+            {
+                Gizmos.color = Color.magenta; // Animator تفعيل
+            }
             else
             {
                 Gizmos.color = Color.white; // عادي
@@ -476,6 +505,9 @@ public class HelperNPC : MonoBehaviour
             if (waypoints[i].interactionType != InteractionType.None)
                 label += $" [{waypoints[i].interactionType}]";
 
+            if (waypoints[i].activateAnimatorOnArrival) // ⭐ جديد
+                label += " 🎬";
+
             UnityEditor.Handles.Label(pos + Vector3.up * 0.5f, label);
 
             // رسم الأوبجكت التفاعلي
@@ -484,6 +516,14 @@ public class HelperNPC : MonoBehaviour
                 Gizmos.color = Color.red;
                 Gizmos.DrawLine(pos, waypoints[i].interactionObject.position);
                 Gizmos.DrawWireSphere(waypoints[i].interactionObject.position, 0.4f);
+            }
+
+            // رسم الأوبجكت اللي عليه Animator
+            if (waypoints[i].objectAnimatorToActivate != null)
+            {
+                Gizmos.color = Color.magenta;
+                Gizmos.DrawLine(pos, waypoints[i].objectAnimatorToActivate.transform.position);
+                Gizmos.DrawWireSphere(waypoints[i].objectAnimatorToActivate.transform.position, 0.3f);
             }
 #endif
         }
