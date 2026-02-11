@@ -4,24 +4,24 @@ using System.Collections;
 public class PlayerStringsVisual : MonoBehaviour
 {
     [Header("String Settings")]
-    public Transform topPivot;          // ÇáÌÓã ÇáãÊÍÑß ÇáÚáæí
-    public Transform[] attachPoints;    // äŞÇØ ÇáÑÈØ Úáì ÇááÇÚÈ (ÇáíÏíä¡ ÇáÑÌáíä)
+    public Transform topPivot;         
+    public Transform[] attachPoints;    
     public float stringThickness = 0.02f;
     public Color stringColor = new Color(0.4f, 0.3f, 0.2f);
     public Material stringMaterial;
 
 
     [Header("Pivot Movement")]
-    public float pivotHeight = 4f;      // ÇÑÊİÇÚ ÇáÌÓã ÇáÚáæí Úä ÇááÇÚÈ
-    public float floatSpeed = 2f;       // ÓÑÚÉ ÇáØİæ
-    public float followSpeed = 8f;      // ÓÑÚÉ ãÊÇÈÚÉ ÇááÇÚÈ
-    public float floatRadius = 1.5f;    // äÕİ ÏÇÆÑÉ ÇáØİæ
+    public float pivotHeight = 4f;     
+    public float floatSpeed = 2f;     
+    public float followSpeed = 8f;      
+    public float floatRadius = 1.5f;    
 
     [Header("String Physics")]
-    public int stringResolution = 4;    // äŞÇØ İí ÇáÎíØ (ááÊãÇíá)
-    public float swingSpeed = 1.5f;     // ÓÑÚÉ ÊãÇíá ÇáÎíæØ
-    public float swingAmount = 0.2f;    // ßãíÉ ÇáÊãÇíá
-    public float gravityEffect = 0.3f;  // ÇäÍäÇÁ ÇáÎíæØ ááÃÓİá
+    public int stringResolution = 4;    
+    public float swingSpeed = 1.5f;    
+    public float swingAmount = 0.2f;    
+    public float gravityEffect = 0.3f;  
 
     // ÇáãÊÛíÑÇÊ ÇáÎÇÕÉ
     private LineRenderer[] stringRenderers;
@@ -31,19 +31,19 @@ public class PlayerStringsVisual : MonoBehaviour
 
     void Start()
     {
-        // ÅĞÇ áã íæÌÏ ÌÓã Úáæí¡ ääÔÆå
+
         if (topPivot == null)
         {
             CreateTopPivot();
         }
 
-        // ÅÚÏÇÏ ÇáÎíæØ
+
         InitializeStrings();
 
-        // ÅÚÏÇÏÇÊ ÍÑßÉ ÇáØİæ
+
         SetupSwingEffects();
 
-        // æÖÚ ÇáÈÏÇíÉ
+
         currentPivotPosition = transform.position + Vector3.up * pivotHeight;
     }
 
@@ -52,7 +52,7 @@ public class PlayerStringsVisual : MonoBehaviour
         GameObject pivot = new GameObject("StringTopPivot");
         topPivot = pivot.transform;
 
-        // ÅÖÇİÉ Ôßá ãÑÆí ÕÛíÑ
+     
         GameObject visual = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         visual.transform.SetParent(topPivot);
         visual.transform.localPosition = Vector3.zero;
@@ -83,10 +83,10 @@ public class PlayerStringsVisual : MonoBehaviour
         lr.startWidth = stringThickness;
         lr.endWidth = stringThickness * 0.7f;
 
-        // åĞÇ åæ ÇáÓØÑ Çáãåã:
-        lr.material = stringMaterial; // ? ÃÖİ åĞÇ ÇáÓØÑ
 
-        // Ãæ ÅĞÇ ßäÊ ÊÑíÏ ãÇÏÉ ÇİÊÑÇÖíÉ ÅĞÇ áã ÊÍÏÏ æÇÍÏÉ:
+        lr.material = stringMaterial; 
+
+
         if (stringMaterial != null)
         {
             lr.material = stringMaterial;
@@ -121,13 +121,13 @@ public class PlayerStringsVisual : MonoBehaviour
 
     void Update()
     {
-        // ÊÍÏíË ÍÑßÉ ÇáÌÓã ÇáÚáæí
+
         UpdatePivotMovement();
 
-        // ÊÍÏíË ÌãíÚ ÇáÎíæØ
+
         UpdateAllStrings();
 
-        // ÊÍÏíË ÊãÇíá ÇáÎíæØ
+
         UpdateSwingTimers();
     }
 
@@ -135,18 +135,18 @@ public class PlayerStringsVisual : MonoBehaviour
     {
         if (topPivot == null) return;
 
-        // ÇáåÏİ: İæŞ ÇááÇÚÈ ãÈÇÔÑÉ
+
         Vector3 targetBasePosition = transform.position + Vector3.up * pivotHeight;
 
-        // ÍÑßÉ Øİæ ÏÇÆÑíÉ
+
         float time = Time.time * floatSpeed;
         Vector3 floatMovement = new Vector3(
             Mathf.Sin(time) * floatRadius,
-            Mathf.Cos(time * 0.7f) * 0.5f, // ÍÑßÉ ÚãæÏíÉ ÈÓíØÉ
+            Mathf.Cos(time * 0.7f) * 0.5f, 
             Mathf.Cos(time) * floatRadius
         );
 
-        // ÇáãæŞÚ ÇáäåÇÆí ãÚ ÇáØİæ
+
         Vector3 targetPosition = targetBasePosition + floatMovement;
 
         // ÍÑßÉ äÇÚãÉ ÊÌÇå ÇáåÏİ
