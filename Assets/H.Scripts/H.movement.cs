@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
@@ -6,6 +6,7 @@ public class PlayerController : MonoBehaviour
     public float moveSpeed = 5f;
     public float sprintMultiplier = 1.8f;
     public float crouchSpeedMultiplier = 0.5f;
+    public float rotationSpeed = 15f;
 
     [Header("Jump")]
     public float jumpForce = 10f;
@@ -63,6 +64,13 @@ public class PlayerController : MonoBehaviour
 
             // ⭐ حساب موضع القدمين الثابت (الجزء السفلي من الكولايدر)
             feetYPosition = transform.position.y - (capsuleCollider.height / 2f) + capsuleCollider.radius;
+            
+            // ⭐ إضافة مادة فيزيائية بدون احتكاك لمنع التعليق بالزوايا
+            PhysicsMaterial noFrictionMaterial = new PhysicsMaterial("NoFriction");
+            noFrictionMaterial.dynamicFriction = 0f;
+            noFrictionMaterial.staticFriction = 0f;
+            noFrictionMaterial.frictionCombine = PhysicsMaterialCombine.Minimum;
+            capsuleCollider.material = noFrictionMaterial;
         }
     }
 
@@ -152,11 +160,17 @@ public class PlayerController : MonoBehaviour
 
         isMoving = Mathf.Abs(moveInput) > 0.1f;
 
-        // ✅ الدوران المعدل - الجسم يواجه اتجاه الحركة
+        // ✅ الدوران المعدل - الجسم يلتف بسلاسة
         if (moveInput > 0) // يمين = +Z
-            transform.rotation = Quaternion.Euler(0, 0, 0); // يواجه للأمام (+Z)
+        {
+            Quaternion targetRotation = Quaternion.Euler(0, 0, 0); // يواجه للأمام (+Z)
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.fixedDeltaTime * rotationSpeed);
+        }
         else if (moveInput < 0) // يسار = -Z
-            transform.rotation = Quaternion.Euler(0, 180, 0); // يواجه للخلف (-Z)
+        {
+            Quaternion targetRotation = Quaternion.Euler(0, 180, 0); // يواجه للخلف (-Z)
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.fixedDeltaTime * rotationSpeed);
+        }
     }
 
     void CheckCollisions()

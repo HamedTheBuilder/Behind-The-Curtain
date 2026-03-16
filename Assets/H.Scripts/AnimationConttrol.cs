@@ -26,6 +26,9 @@ public class PlayerAnimationController : MonoBehaviour
     [Tooltip("اسم البارامتر للجدار")]
     public string isTouchingWallParam = "IsTouchingWall";
 
+    [Tooltip("اسم البارامتر لدفع الجدار")]
+    public string isPushingParam = "IsPushing";
+
     [Tooltip("اسم تريجر القفز")]
     public string jumpTrigger = "Jump";
 
@@ -108,6 +111,10 @@ public class PlayerAnimationController : MonoBehaviour
         animator.SetBool(isSprintingParam, playerController.IsSprinting());
         animator.SetBool(isGroundedParam, playerController.IsGrounded());
         animator.SetBool(isTouchingWallParam, playerController.IsTouchingWall());
+        
+        // ⭐ منطق دفع الجدار: يجب أن يكون على الأرض + يلمس الجدار + يحاول الحركة نحوه (يمشي أو يركض)
+        bool isPushing = playerController.IsGrounded() && playerController.IsTouchingWall() && playerController.IsMoving();
+        animator.SetBool(isPushingParam, isPushing);
     }
 
     void HandleJumpAnimation()

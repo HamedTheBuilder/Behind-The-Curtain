@@ -11,10 +11,10 @@ public class CollectibleTicket : MonoBehaviour
     [SerializeField] private float rotationSpeed = 50f; // سرعة الدوران
     [SerializeField] private Vector3 rotationAxis = Vector3.up; // محور الدوران
     
-    [Header("Collection")]
-    [SerializeField] private float flyToUISpeed = 15f; // سرعة الطيران للشاشة
-    [SerializeField] private float shrinkSpeed = 10f; // سرعة التصغير
-    [SerializeField] private Vector3 targetUIPosition = new Vector3(-8f, 4f, 0f); // موضع الزاوية (يسار أعلى)
+    [Header("Collection Animation")]
+    [SerializeField] private float scaleUpAmount = 1.2f; // مقدار التكبير عند الجمع (رقم > 1 للتكبير)
+    [SerializeField] private float scaleUpDuration = 0.15f; // مدة التكبير
+    [SerializeField] private float fadeDuration = 0.4f; // مدة الاختفاء التدريجي
     
     [Header("Audio")]
     [SerializeField] private AudioClip collectSound; // صوت الجمع
@@ -30,28 +30,21 @@ public class CollectibleTicket : MonoBehaviour
     private Vector3 startPosition;
     private float floatTimer;
     private bool isCollected = false;
-    private Vector3 targetWorldPosition;
-    private Camera mainCamera;
+    
+    private Renderer[] ticketRenderers;
+    private float collectionTimer = 0f;
+    private Vector3 originalScale;
     
     void Start()
     {
         startPosition = transform.position;
         floatTimer = Random.Range(0f, 2f * Mathf.PI); // عشان ما يطفون كلهم بنفس الوقت
-        mainCamera = Camera.main;
         
-        // حساب الموضع العالمي للزاوية
-        CalculateTargetPosition();
+        ticketRenderers = GetComponentsInChildren<Renderer>();
+        originalScale = transform.localScale;
     }
     
-    void CalculateTargetPosition()
-    {
-        if (mainCamera != null)
-        {
-            // تحويل من Screen Space لـ World Space
-            Vector3 screenPos = new Vector3(Screen.width * 0.1f, Screen.height * 0.9f, 10f);
-            targetWorldPosition = mainCamera.ScreenToWorldPoint(screenPos);
-        }
-    }
+
     
     void Update()
     {
@@ -62,8 +55,8 @@ public class CollectibleTicket : MonoBehaviour
         }
         else
         {
-            // الطيران للشاشة والتصغير
-            FlyToUI();
+            // التكبير والاختفاء التدريجي
+            AnimateCollection();
         }
     }
     
@@ -78,26 +71,38 @@ public class CollectibleTicket : MonoBehaviour
         transform.Rotate(rotationAxis, rotationSpeed * Time.deltaTime, Space.World);
     }
     
-    void FlyToUI()
+    void AnimateCollection()
     {
-        // ⭐ الطيران باتجاه زاوية الشاشة
-        transform.position = Vector3.Lerp(
-            transform.position,
-            targetWorldPosition,
-            Time.deltaTime * flyToUISpeed
-        );
+        collectionTimer += Time.deltaTime;
         
-        // ⭐ التصغير
-        transform.localScale = Vector3.Lerp(
-            transform.localScale,
-            Vector3.zero,
-            Time.deltaTime * shrinkSpeed
-        );
-        
-        // ⭐ الحذف عند الوصول
-        if (transform.localScale.magnitude < 0.1f)
+        // ⭐ التكبير أولاً
+        if (collectionTimer <= scaleUpDuration)
         {
-            Destroy(gameObject);
+            float t = collectionTimer / scaleUpDuration;
+            transform.localScale = Vector3.Lerp(originalScale, originalScale * scaleUpAmount, t);
+        }
+        else // ⭐ بعدين الاختفاء التدريجي وتصغيره للصفر
+        {
+            float fadeProgress = (collectionTimer - scaleUpDuration) / fadeDuration;
+            
+            if (fadeProgress <= 1f)
+            {
+                // فقط نغير الشفافية (Fade Out) بدون تصغير الحجم للصفر
+                foreach (Renderer r in ticketRenderers)
+                {
+                    if (r != null && r.material.HasProperty("_Color"))
+                    {
+                        Color c = r.material.color;
+                        c.a = Mathf.Lerp(1f, 0f, fadeProgress);
+                        r.material.color = c;
+                    }
+                }
+            }
+            else
+            {
+                // انتهى الأنيميشن، نحذف العنصر
+                Destroy(gameObject);
+            }
         }
     }
     
@@ -152,11 +157,5 @@ public class CollectibleTicket : MonoBehaviour
     {
         Gizmos.color = isCollected ? Color.green : Color.yellow;
         Gizmos.DrawWireSphere(transform.position, 0.3f);
-        
-        if (isCollected && mainCamera != null)
-        {
-            Gizmos.color = Color.cyan;
-            Gizmos.DrawLine(transform.position, targetWorldPosition);
-        }
     }
 }
